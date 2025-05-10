@@ -4,12 +4,14 @@ import com.creditsimulator.domain.model.tax.TaxPolicy;
 import com.creditsimulator.domain.model.tax.TaxStrategy;
 import com.creditsimulator.domain.model.tax.TaxStrategyFactory;
 import com.creditsimulator.shared.enums.TaxType;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 
+@Component
 public class CreditSimulationCalculator {
     private final TaxPolicy taxPolicy;
 

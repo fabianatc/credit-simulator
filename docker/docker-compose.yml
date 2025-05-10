@@ -1,0 +1,34 @@
+services:
+
+  postgres:
+    image: postgres:15
+    restart: always
+    container_name: simulator-postgres
+    environment:
+      POSTGRES_DB: simulator
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5439:5432"
+    volumes:
+      - ./data/simulator.db:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - simulator-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    container_name: simulator-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"       # Porta de comunicação
+      - "15672:15672"     # UI Web de administração
+    networks:
+      - simulator-net
+
+networks:
+  simulator-net:
+    driver: bridge

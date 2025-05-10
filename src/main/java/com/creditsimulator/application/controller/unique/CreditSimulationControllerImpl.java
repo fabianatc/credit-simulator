@@ -1,14 +1,12 @@
-package com.creditsimulator.application.controller;
+package com.creditsimulator.application.controller.unique;
 
 import com.creditsimulator.application.request.CreditSimulationRequest;
 import com.creditsimulator.application.response.CreditSimulationResponse;
 import com.creditsimulator.domain.model.simulation.CreditSimulation;
 import com.creditsimulator.domain.port.incoming.SimulateCreditUseCase;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -19,7 +17,7 @@ public class CreditSimulationControllerImpl implements CreditSimulationControlle
     private final SimulateCreditUseCase simulateCreditUseCase;
 
     @Override
-    public ResponseEntity<CreditSimulationResponse> simulate(@Valid @RequestBody CreditSimulationRequest request) {
+    public ResponseEntity<CreditSimulationResponse> simulate(CreditSimulationRequest request) {
         log.info("Received simulation request: {}", request);
         CreditSimulation simulation = simulateCreditUseCase.simulate(
             request.creditAmount(),

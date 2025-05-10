@@ -1,4 +1,4 @@
-package com.creditsimulator.application.controller;
+package com.creditsimulator.application.controller.unique;
 
 import com.creditsimulator.application.request.CreditSimulationRequest;
 import com.creditsimulator.application.response.CreditSimulationResponse;
@@ -18,7 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public interface CreditSimulationController {
     @Operation(
         summary = "Simulate a credit request",
-        description = "Simulates a credit based on the amount, customer's birth date and payment term.",
+        description = """ 
+            Simulates a credit based on the amount, customer's birth date and payment period.
+            Optionally, a fixed tax can be provided to simulate a fixed tax strategy and currency convertion tax can be provided.
+            """,
         requestBody = @RequestBody(
             description = "Credit simulation input",
             required = true,

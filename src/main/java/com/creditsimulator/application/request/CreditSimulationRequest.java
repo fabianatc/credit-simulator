@@ -25,7 +25,7 @@ public record CreditSimulationRequest(
     LocalDate birthDate,
 
     @NotNull
-    @Schema(description = "Tax type to be used in simulation", example = "AGE_BASED")
+    @Schema(description = "Tax type to be used in simulation", allowableValues = {"FIXED", "AGE_BASED"})
     TaxType taxType,
 
     @Schema(description = "Fixed annual tax rate (required if taxType is FIXED)", example = "0.035")

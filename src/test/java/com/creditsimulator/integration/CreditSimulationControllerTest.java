@@ -1,5 +1,6 @@
 package com.creditsimulator.integration;
 
+import com.creditsimulator.application.controller.unique.CreditSimulationControllerImpl;
 import com.creditsimulator.application.request.CreditSimulationRequest;
 import com.creditsimulator.domain.model.simulation.CreditSimulation;
 import com.creditsimulator.domain.port.incoming.SimulateCreditUseCase;
@@ -22,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@WebMvcTest(controllers = com.creditsimulator.application.controller.CreditSimulationControllerImpl.class)
+@WebMvcTest(controllers = CreditSimulationControllerImpl.class)
 public class CreditSimulationControllerTest {
 
     @Autowired

@@ -1,0 +1,8 @@
+CREATE USER simulator WITH PASSWORD 'Xc.m)McmIq' LOGIN;
+
+\connect simulator
+
+GRANT USAGE, CREATE ON SCHEMA public TO simulator;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO simulator;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO simulator;
+GRANT ALL PRIVILEGES ON DATABASE simulator TO simulator;

@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250510-create_simulation_tables.sql
+      author: fabiana.casagrande
+      changes:
+        - sqlFile:
+            encoding: utf8
+            path: seeds/20250510-create_simulation_tables.sql
+            relativeToChangelogFile: true
+            splitStatements: false
