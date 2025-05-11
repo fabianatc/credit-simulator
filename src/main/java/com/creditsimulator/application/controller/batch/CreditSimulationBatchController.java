@@ -55,7 +55,7 @@ public interface CreditSimulationBatchController {
 
         @Parameter(description = "Requester's email address", example = "fabiana@email.com", required = true)
         @RequestParam("requesterEmail") String requesterEmail
-    );
+    ) throws IOException;
 
     @Operation(
         summary = "Export simulation results as CSV",

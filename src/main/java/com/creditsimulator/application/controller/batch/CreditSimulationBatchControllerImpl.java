@@ -22,7 +22,7 @@ public class CreditSimulationBatchControllerImpl implements CreditSimulationBatc
 
 
     @Override
-    public ResponseEntity<BatchSimulationResponse> uploadBatchCsv(MultipartFile file, String requesterName, String requesterEmail) {
+    public ResponseEntity<BatchSimulationResponse> uploadBatchCsv(MultipartFile file, String requesterName, String requesterEmail) throws IOException {
         UUID jobId = uploadBatchSimulationUseCase.process(file, requesterName, requesterEmail);
 
         return ResponseEntity.accepted().body(new BatchSimulationResponse(
