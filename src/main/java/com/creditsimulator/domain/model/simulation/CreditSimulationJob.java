@@ -25,6 +25,14 @@ public record CreditSimulationJob(
         );
     }
 
+    public CreditSimulationJob withTotalSimulations(int newTotalSimulations) {
+        return new CreditSimulationJob(
+            id, status, createdAt, finishedAt,
+            newTotalSimulations, successCount, errorCount,
+            requesterName, requesterEmail
+        );
+    }
+
     public CreditSimulationJob withErrorCount(int newErrorCount) {
         return new CreditSimulationJob(
             id, status, createdAt, finishedAt,

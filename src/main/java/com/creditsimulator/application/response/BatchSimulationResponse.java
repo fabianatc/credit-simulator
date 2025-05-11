@@ -6,7 +6,16 @@ import java.util.UUID;
 
 @Schema(description = "Response after CSV batch request")
 public record BatchSimulationResponse(
-    @Schema(description = "Batch simulation job identifier", example = "d56fa0a2-d542-4e12-9a73-19e5e3340f3d")
-    UUID jobId
+    @Schema(description = "Identifier of the created job", example = "1d191431-bc33-4c26-98cd-bbdb6a8a6f12")
+    UUID jobId,
+
+    @Schema(description = "User guidance message", example = "Your batch is being processed. Results will be sent by email.")
+    String message,
+
+    @Schema(description = "Whether results will be sent by email", example = "true")
+    boolean emailNotification,
+
+    @Schema(description = "API endpoint to query the results manually", example = "/simulations/batch/{jobId}/csv")
+    String resultUrl
 ) {
 }

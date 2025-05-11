@@ -27,40 +27,53 @@ public class EmailNotificationService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(job.requesterEmail());
-            helper.setSubject("Resultado da simulação em lote [" + job.id() + "]");
+            helper.setSubject("Credit simulation results [" + job.id() + "]");
             helper.setText(buildBody(job), false);
 
             String csvContent = buildCsv(results);
-            helper.addAttachment("resultados-" + job.id() + ".csv",
+            helper.addAttachment("results-" + job.id() + ".csv",
                 new ByteArrayResource(csvContent.getBytes(StandardCharsets.UTF_8)));
 
             mailSender.send(message);
-            log.info("[EMAIL] Resultados enviados para {}", job.requesterEmail());
+            log.info("[EMAIL] Results sent to {}", job.requesterEmail());
 
         } catch (MessagingException e) {
-            log.error("[EMAIL] Falha ao enviar e-mail para {}: {}", job.requesterEmail(), e.getMessage());
+            log.error("[EMAIL] Failed to send results to {}: {}", job.requesterEmail(), e.getMessage());
         }
     }
 
     private String buildBody(CreditSimulationJob job) {
-        return """
-            Olá %s,
+        String base = """
+            Hello %s,
             
-            O processamento do lote de simulações foi concluído.
+            Your batch of credit simulations has been processed.
             
-            Total de simulações: %d
-            Sucesso: %d
-            Erros: %d
-            
-            Em anexo, você encontra o arquivo com os resultados completos.
-            
-            Obrigado.
+            Total simulations: %d
+            Successful: %d
+            Failed: %d
             """.formatted(
             job.requesterName(),
             job.totalSimulations(),
             job.successCount(),
             job.errorCount()
         );
+
+        if (job.errorCount() > 0) {
+            base += """
+                
+                ⚠️ Some simulations failed during processing.
+                Please review the attached file for details (see the 'errorMessage' column).
+                
+                If needed, you can resubmit a new CSV file containing only the corrected records.
+                """;
+        }
+
+        base += """
+            
+            Thank you for using the credit simulator.
+            """;
+
+        return base;
     }
 
     private String buildCsv(List<CreditSimulationResult> results) {
