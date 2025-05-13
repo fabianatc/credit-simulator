@@ -67,11 +67,6 @@ public class BatchSimulationExportService {
         return new File(fileName);
     }
 
-    private String escape(String value) {
-        if (value == null) return "";
-        return value.replace("\"", "\"\"");
-    }
-
     public List<CreditSimulationResult> findByJobId(UUID jobId) {
         return resultPersistence.findByJobId(jobId);
     }
