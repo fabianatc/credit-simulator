@@ -22,7 +22,7 @@ public class CreditSimulationPerformanceTest {
     @Test
     void shouldCalculateWithinExpectedTime() {
         int runs = 10_000;
-        
+
         calculator.calculate(
             BigDecimal.valueOf(10000),
             24,

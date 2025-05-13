@@ -21,7 +21,6 @@ public abstract class BaseIntegrationTest {
             .withDatabaseName("simulator")
             .withUsername("simulator")
             .withPassword("Xc.m)McmIq");
-    ;
 
     @BeforeAll
     static void beforeAll() {
@@ -45,7 +44,7 @@ public abstract class BaseIntegrationTest {
     void setUp() {
         System.out.println("🚀 Running test on port: " + port);
         RestAssured.baseURI =
-            "http://localhost:" + port; // Sets the base URI for RestAssured to make HTTP requests
+            "http://localhost:" + port + "/api/v1"; // Sets the base URI for RestAssured to make HTTP requests
     }
 }
 
