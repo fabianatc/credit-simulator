@@ -1,140 +1,161 @@
 package com.creditsimulator.integration;
 
-import com.creditsimulator.application.controller.unique.CreditSimulationControllerImpl;
-import com.creditsimulator.application.request.CreditSimulationRequest;
 import com.creditsimulator.domain.model.simulation.CreditSimulation;
 import com.creditsimulator.domain.port.incoming.SimulateCreditUseCase;
 import com.creditsimulator.shared.enums.TaxType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.creditsimulator.shared.exception.BusinessValidationException;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.Mockito.when;
 
 
-@WebMvcTest(controllers = CreditSimulationControllerImpl.class)
-public class CreditSimulationControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Mock
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("integrationtest")
+public class CreditSimulationControllerTest extends BaseIntegrationTest {
+    @MockitoBean
     private SimulateCreditUseCase simulateCreditUseCase;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Test
-    void shouldSimulateCreditWithFixedTaxAndUSD() throws Exception {
-        // Arrange
-        CreditSimulationRequest request = new CreditSimulationRequest(
-            "USD",
+    void shouldSimulateCreditWithAgeBasedTaxAndDefaultCurrency() {
+        String json = """
+            {
+              "creditAmount": 10000.00,
+              "termInMonths": 24,
+              "birthDate": "1990-05-20",
+              "taxType": "AGE_BASED"
+            }
+            """;
+
+        CreditSimulation simulation = new CreditSimulation(
             new BigDecimal("10000.00"),
             24,
             LocalDate.of(1990, 5, 20),
-            TaxType.FIXED,
-            new BigDecimal("0.035")
-        );
-
-        CreditSimulation simulation = new CreditSimulation(
-            new BigDecimal("2000.00"),
-            24,
-            request.birthDate(),
-            new BigDecimal("2254.70"),
+            new BigDecimal("12254.70"),
             new BigDecimal("93.11"),
             new BigDecimal("254.70")
         );
 
-        Mockito.when(simulateCreditUseCase.simulate(
-            request.creditAmount(),
-            request.termInMonths(),
-            request.birthDate(),
-            request.taxType(),
-            request.fixedTax(),
-            request.currency()
+        when(simulateCreditUseCase.simulate(
+            new BigDecimal("10000.00"),
+            24,
+            LocalDate.of(1990, 5, 20),
+            TaxType.AGE_BASED,
+            null,
+            null
         )).thenReturn(simulation);
 
-        // Act & Assert
-        mockMvc.perform(post("/simulations")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.totalAmount").value("2254.70"))
-            .andExpect(jsonPath("$.monthlyPayment").value("93.11"))
-            .andExpect(jsonPath("$.taxPaid").value("254.70"))
-            .andExpect(jsonPath("$.currency").value("USD"));
+        given()
+            .contentType(ContentType.JSON)
+            .body(json)
+            .when()
+            .post("/simulations")
+            .then()
+            .statusCode(200)
+            .body("totalAmount", equalTo(12254.7f))
+            .body("monthlyPayment", equalTo(93.11f));
     }
 
     @Test
-    void shouldSimulateCreditWithAgeBasedTaxAndDefaultCurrency() throws Exception {
-        CreditSimulationRequest request = new CreditSimulationRequest(
-            null,
-            new BigDecimal("15000.00"),
-            36,
-            LocalDate.of(1985, 3, 10),
-            TaxType.AGE_BASED,
-            null
-        );
+    void shouldSimulateCreditWithFixedTaxAndCustomCurrency() {
+        String json = """
+            {
+              "currency": "USD",
+              "creditAmount": 15000.00,
+              "termInMonths": 36,
+              "birthDate": "1985-08-15",
+              "taxType": "FIXED",
+              "fixedTax": 0.045
+            }
+            """;
 
         CreditSimulation simulation = new CreditSimulation(
-            request.creditAmount(),
-            request.termInMonths(),
-            request.birthDate(),
-            new BigDecimal("16478.00"),
-            new BigDecimal("457.72"),
-            new BigDecimal("1478.00")
+            new BigDecimal("15000.00"),
+            36,
+            LocalDate.of(1985, 8, 15),
+            new BigDecimal("17000.00"),
+            new BigDecimal("472.22"),
+            new BigDecimal("2000.00")
         );
 
-        Mockito.when(simulateCreditUseCase.simulate(
-            request.creditAmount(),
-            request.termInMonths(),
-            request.birthDate(),
-            request.taxType(),
-            request.fixedTax(),
-            request.currency()
+        when(simulateCreditUseCase.simulate(
+            new BigDecimal("15000.00"),
+            36,
+            LocalDate.of(1985, 8, 15),
+            TaxType.FIXED,
+            new BigDecimal("0.045"),
+            "USD"
         )).thenReturn(simulation);
 
-        mockMvc.perform(post("/simulations")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.totalAmount").value("16478.00"))
-            .andExpect(jsonPath("$.monthlyPayment").value("457.72"))
-            .andExpect(jsonPath("$.taxPaid").value("1478.00"))
-            .andExpect(jsonPath("$.currency").doesNotExist()); // or default to BRL if added
+        given()
+            .contentType(ContentType.JSON)
+            .body(json)
+            .when()
+            .post("/simulations")
+            .then()
+            .statusCode(200)
+            .body("totalAmount", equalTo(17000.00f))
+            .body("monthlyPayment", equalTo(472.22f))
+            .body("currency", equalTo("USD"));
     }
 
     @Test
-    void shouldReturnBadRequestWhenFixedTaxIsMissing() throws Exception {
-        CreditSimulationRequest request = new CreditSimulationRequest(
-            "EUR",
-            new BigDecimal("12000.00"),
-            12,
-            LocalDate.of(1992, 11, 5),
-            TaxType.FIXED,
-            null
-        );
+    void shouldReturn400WhenRequiredFieldsAreMissing() {
+        String json = """
+            {
+              "currency": "USD"
+            }
+            """;
 
-        Mockito.when(simulateCreditUseCase.simulate(
-            Mockito.any(), Mockito.anyInt(), Mockito.any(), Mockito.any(), Mockito.isNull(), Mockito.any()
-        )).thenThrow(new IllegalArgumentException("Fixed tax must be provided when tax type is FIXED"));
-
-        mockMvc.perform(post("/simulations")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isInternalServerError())
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("Fixed tax must be provided")));
+        given()
+            .contentType(ContentType.JSON)
+            .body(json)
+            .when()
+            .post("/simulations")
+            .then()
+            .statusCode(400)
+            .body("message", containsString("creditAmount"))
+            .body("message", containsString("termInMonths"))
+            .body("message", containsString("birthDate"))
+            .body("message", containsString("taxType"));
     }
 
+    @Test
+    void shouldReturn400WhenFixedTaxIsMissingForFixedType() {
+        String json = """
+            {
+              "creditAmount": 8000.00,
+              "termInMonths": 18,
+              "birthDate": "1995-10-01",
+              "taxType": "FIXED"
+            }
+            """;
+
+        when(simulateCreditUseCase.simulate(
+            new BigDecimal("8000.00"),
+            18,
+            LocalDate.of(1995, 10, 1),
+            TaxType.FIXED,
+            null,
+            null
+        )).thenThrow(new BusinessValidationException("Fixed tax must be provided when tax type is FIXED"));
+
+        given()
+            .contentType(ContentType.JSON)
+            .body(json)
+            .when()
+            .post("/simulations")
+            .then()
+            .statusCode(400)
+            .body("message", containsString("Fixed tax"));
+    }
 }

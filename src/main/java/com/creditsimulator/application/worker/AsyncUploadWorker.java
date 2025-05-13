@@ -24,7 +24,8 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -49,12 +50,18 @@ public class AsyncUploadWorker {
                 .setIgnoreEmptyLines(true)
                 .setIgnoreSurroundingSpaces(true)
                 .setTrim(true)
+                .setHeader()
                 .setSkipHeaderRecord(true)
                 .get();
 
-            headerValidation(myFormat.parse(reader));
+            CSVParser parser = myFormat.parse(reader);
+            headerValidation(parser);
 
-            for (CSVRecord record : myFormat.parse(reader)) {
+            for (CSVRecord record : parser) {
+                if (record.stream().allMatch(String::isBlank)) {
+                    continue;
+                }
+
                 lineCount++;
                 if (lineCount > MAX_LINES) {
                     log.warn("[UPLOAD][{}] Max lines exceeded ({} lines)", jobId, MAX_LINES);
@@ -100,10 +107,9 @@ public class AsyncUploadWorker {
 
     private void headerValidation(CSVParser parser) {
         // ✅ Header validation
-        Set<String> expectedHeaders = Set.of("creditAmount", "termInMonths", "birthDate", "taxType", "fixedTax", "currency");
-        Set<String> actualHeaders = parser.getHeaderMap().keySet();
-
-        if (!actualHeaders.containsAll(expectedHeaders)) {
+        List<String> expectedHeaders = List.of("creditAmount", "termInMonths", "birthDate", "taxType", "fixedTax", "currency");
+        List<String> actualHeaders = parser.getHeaderNames(); // ✅ Sem NPE
+        if (!new HashSet<>(actualHeaders).containsAll(expectedHeaders)) {
             throw new IllegalArgumentException("The CSV file must include all required headers: " + expectedHeaders);
         }
     }

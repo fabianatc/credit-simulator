@@ -5,12 +5,12 @@ import com.creditsimulator.application.response.CreditSimulationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Tag(name = "Simulation Controller", description = "Endpoints for credit simulation")
@@ -22,7 +22,7 @@ public interface CreditSimulationController {
             Simulates a credit based on the amount, customer's birth date and payment period.
             Optionally, a fixed tax can be provided to simulate a fixed tax strategy and currency convertion tax can be provided.
             """,
-        requestBody = @RequestBody(
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "Credit simulation input",
             required = true,
             content = @Content(

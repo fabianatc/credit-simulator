@@ -3,6 +3,7 @@ package com.creditsimulator.application.request;
 import com.creditsimulator.shared.enums.TaxType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,6 +18,7 @@ public record CreditSimulationRequest(
     BigDecimal creditAmount,
 
     @NotNull
+    @Positive
     @Schema(description = "Payment term in months", example = "24")
     Integer termInMonths,
 

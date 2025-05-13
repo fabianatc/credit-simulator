@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -22,8 +22,8 @@ public class BatchSimulationService implements BatchSimulationUseCase {
     private final AsyncUploadWorker asyncUploadWorker;
 
     @Override
-    public UUID process(MultipartFile file, String requesterName, String requesterEmail) throws IOException {
-        if (file.isEmpty() || !file.getOriginalFilename().toLowerCase().endsWith(".csv")) {
+    public UUID process(MultipartFile file, String requesterName, String requesterEmail) {
+        if (file == null || file.isEmpty() || !Objects.requireNonNull(file.getOriginalFilename()).toLowerCase().endsWith(".csv")) {
             throw new IllegalArgumentException("Invalid file: must be a non-empty CSV file.");
         }
 

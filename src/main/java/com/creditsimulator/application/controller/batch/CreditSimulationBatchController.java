@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,5 +67,5 @@ public interface CreditSimulationBatchController {
         }
     )
     @GetMapping("/{jobId}/csv")
-    void exportBatchAsCsv(@PathVariable UUID jobId, HttpServletResponse response) throws IOException;
+    ResponseEntity<ByteArrayResource> exportBatchAsCsv(@PathVariable UUID jobId);
 }

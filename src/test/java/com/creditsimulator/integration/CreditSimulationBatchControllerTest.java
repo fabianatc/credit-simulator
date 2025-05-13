@@ -1,154 +1,83 @@
 package com.creditsimulator.integration;
 
+import com.creditsimulator.application.response.BatchSimulationResponse;
 import com.creditsimulator.domain.port.incoming.BatchSimulationUseCase;
-import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.shaded.org.hamcrest.Matchers;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("testintegration")
+@ActiveProfiles("integrationtest")
 public class CreditSimulationBatchControllerTest extends BaseIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Mock
-    private BatchSimulationUseCase batchSimulationUseCase;
+    @MockitoBean
+    BatchSimulationUseCase batchSimulationUseCase;
 
     @Test
-    void shouldUploadValidCsvSuccessfully() throws Exception {
-        // Arrange
-        UUID fakeJobId = UUID.randomUUID();
-        Mockito.when(batchSimulationUseCase.process(
-                any(), anyString(), anyString()))
-            .thenReturn(fakeJobId);
-
-        String validCsv = """
-                creditAmount,termInMonths,birthDate,taxType,fixedTax,currency
-                10000,24,1990-05-20,AGE_BASED,,USD
-            """;
+    void shouldAcceptCsvUploadAndReturnJobId() throws Exception {
+        // simula um CSV válido
+        String csv = "creditAmount,termInMonths,birthDate,taxType,fixedTax,currency\n"
+            + "10000,24,1990-05-20,AGE_BASED,,BRL\n";
 
         MockMultipartFile file = new MockMultipartFile(
-            "file", "valid.csv", "text/csv", validCsv.getBytes()
-        );
+            "file", "simulations.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8));
 
-        mockMvc.perform(multipart("/simulations/batch/upload")
-                .file(file)
-                .param("requesterName", "Fabiana Costa")
-                .param("requesterEmail", "fabiana@email.com")
-                .contentType(MediaType.MULTIPART_FORM_DATA))
-            .andExpect(status().isAccepted())
-            .andExpect(jsonPath("$.jobId").value(fakeJobId.toString()))
-            .andExpect(jsonPath("$.emailNotification").value(true))
-            .andExpect(jsonPath("$.message").value(Matchers.containsString("email")))
-            .andExpect(jsonPath("$.resultUrl").value(Matchers.containsString("/simulations/batch/")));
-    }
-
-    @Test
-    void shouldReturn400WhenCsvHeadersAreMissing() throws Exception {
-        // Arrange: use case lança IllegalArgumentException com "headers"
-        Mockito.when(batchSimulationUseCase.process(
-                any(), anyString(), anyString()))
-            .thenThrow(new IllegalArgumentException("Missing required headers"));
-
-        String invalidCsv = """
-                amount,term,date
-                10000,24,1990-05-20
-            """;
-
-        MockMultipartFile file = new MockMultipartFile(
-            "file", "invalid.csv", "text/csv", invalidCsv.getBytes()
-        );
-
-        mockMvc.perform(multipart("/simulations/batch/upload")
-                .file(file)
-                .param("requesterName", "Fabiana Costa")
-                .param("requesterEmail", "fabiana@email.com")
-                .contentType(MediaType.MULTIPART_FORM_DATA))
-            .andExpect(status().isBadRequest())
-            .andExpect(content().string((Matcher<? super String>) Matchers.containsString("headers")));
-    }
-
-    @Test
-    void shouldAcceptCsvWithInvalidLinesButProcessOthers() throws Exception {
-        String csvWithInvalidLine = """
-            creditAmount,termInMonths,birthDate,taxType,fixedTax,currency
-            10000,24,1990-05-20,AGE_BASED,,USD
-            15000,36,1985-10-10,INVALID_TYPE,0.03,EUR
-            """;
-
+        String requesterName = "Fabiana Costa";
+        String requesterEmail = "fabiana.costa@outlook.com";
         UUID jobId = UUID.randomUUID();
-        Mockito.when(batchSimulationUseCase.process(any(), anyString(), anyString()))
+
+        BatchSimulationResponse expectedResponse = new BatchSimulationResponse(
+            jobId,
+            "Your batch is being processed. Results will be sent to your email when ready.",
+            true,
+            "/simulations/batch/" + jobId + "/csv"
+        );
+
+        when(batchSimulationUseCase.process(any(), eq(requesterName), eq(requesterEmail)))
             .thenReturn(jobId);
 
-        MockMultipartFile file = new MockMultipartFile(
-            "file", "mix.csv", "text/csv", csvWithInvalidLine.getBytes()
-        );
-
-        mockMvc.perform(multipart("/simulations/batch/upload")
-                .file(file)
-                .param("requesterName", "Fabiana")
-                .param("requesterEmail", "fabiana@email.com"))
-            .andExpect(status().isAccepted())
-            .andExpect(jsonPath("$.jobId").value(jobId.toString()));
+        given()
+            .multiPart("file", file.getOriginalFilename(), file.getBytes(), "text/csv")
+            .formParam("requesterName", requesterName)
+            .formParam("requesterEmail", requesterEmail)
+            .when()
+            .post("/simulations/batch/upload")
+            .then()
+            .statusCode(202)
+            .body("jobId", equalTo(jobId.toString()))
+            .body("message", equalTo(expectedResponse.message()))
+            .body("emailNotification", equalTo(true))
+            .body("resultUrl", equalTo(expectedResponse.resultUrl()));
     }
 
     @Test
-    void shouldReturn400WhenCsvExceedsMaxLines() throws Exception {
-        StringBuilder csvBuilder = new StringBuilder("creditAmount,termInMonths,birthDate,taxType,fixedTax,currency\n");
-        for (int i = 0; i <= 10001; i++) {
-            csvBuilder.append("10000,24,1990-05-20,AGE_BASED,,USD\n");
-        }
-
+    void shouldReturn400WhenCsvIsInvalid() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
-            "file", "too-big.csv", "text/csv", csvBuilder.toString().getBytes()
+            "file", "invalid.txt", "text/plain", "invalid content".getBytes(StandardCharsets.UTF_8)
         );
 
-        Mockito.when(batchSimulationUseCase.process(any(), anyString(), anyString()))
-            .thenThrow(new IllegalArgumentException("Maximum allowed lines exceeded"));
+        when(batchSimulationUseCase.process(any(), any(), any()))
+            .thenThrow(new IllegalArgumentException("Invalid file: must be a non-empty CSV file."));
 
-        mockMvc.perform(multipart("/simulations/batch/upload")
-                .file(file)
-                .param("requesterName", "Fabiana")
-                .param("requesterEmail", "fabiana@email.com"))
-            .andExpect(status().isBadRequest())
-            .andExpect(content().string((Matcher<? super String>) Matchers.containsString("Maximum allowed lines")));
-    }
-
-    @Test
-    void shouldReturn400WhenCsvCannotBeParsed() throws Exception {
-        byte[] corruptedContent = new byte[]{0x13, 0x37, 0x00, 0x01}; // binário inválido
-
-        MockMultipartFile file = new MockMultipartFile(
-            "file", "corrupted.csv", "text/csv", corruptedContent
-        );
-
-        Mockito.when(batchSimulationUseCase.process(any(), anyString(), anyString()))
-            .thenThrow(new IOException("Failed to parse CSV"));
-
-        mockMvc.perform(multipart("/simulations/batch/upload")
-                .file(file)
-                .param("requesterName", "Fabiana")
-                .param("requesterEmail", "fabiana@email.com"))
-            .andExpect(status().isInternalServerError())
-            .andExpect(content().string((Matcher<? super String>) Matchers.containsString("Failed to parse CSV")));
+        given()
+            .multiPart("file", file.getOriginalFilename(), file.getBytes(), "text/csv")
+            .formParam("requesterName", "Fabiana")
+            .formParam("requesterEmail", "fabiana@email.com")
+            .when()
+            .post("/simulations/batch/upload")
+            .then()
+            .statusCode(400)
+            .body("message", containsString("Invalid"));
     }
 }

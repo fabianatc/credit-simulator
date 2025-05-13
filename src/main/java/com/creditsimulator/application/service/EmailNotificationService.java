@@ -2,7 +2,6 @@ package com.creditsimulator.application.service;
 
 import com.creditsimulator.domain.model.simulation.CreditSimulationJob;
 import com.creditsimulator.domain.model.simulation.CreditSimulationResult;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +36,7 @@ public class EmailNotificationService {
             mailSender.send(message);
             log.info("[EMAIL] Results sent to {}", job.requesterEmail());
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             log.error("[EMAIL] Failed to send results to {}: {}", job.requesterEmail(), e.getMessage());
         }
     }
