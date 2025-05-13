@@ -140,3 +140,9 @@ GET `/simulations/batch/{jobId}/csv`
 - Testes de integração com containers reais (PostgreSQL)
 
 - Cobertura de exceções, casos de erro, CSV inválido e envio de email
+
+## Autora
+
+- [Fabiana Casagrande Costa](https://www.linkedin.com/in/fabiana-casagrande-costa/)
+- [GitHub do projeto](https://github.com/fabianatc/credit-simulator)
+- [E-mail](mailto:fabianatc@gmail.com)
