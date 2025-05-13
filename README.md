@@ -13,7 +13,7 @@ arquitetura limpa e escalável.
 - Docker (para executar PostgreSQL e RabbitMQ localmente)
 - [Opcional] Postman ou cURL para testes manuais
 
-### 🐘 Banco de Dados
+### 🐘 Banco de Dados e RabbitMQ
 
 Entre na pasta `docker` e execute o comando para executar os containers do PostgreSQL e RabbitMQ localmente, conforme
 abaixo:
