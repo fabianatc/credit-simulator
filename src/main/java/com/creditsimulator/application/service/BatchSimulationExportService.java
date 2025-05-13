@@ -44,15 +44,16 @@ public class BatchSimulationExportService {
             final CSVFormat csvFormat = CSVFormat.DEFAULT;
             final CSVPrinter printer = new CSVPrinter(fileWriter, csvFormat);
 
-            printer.printRecord("id,input,output,status,errorMessage,createdAt");
+            List<String> headers = List.of("id", "input", "output", "status", "errorMessage", "createdAt");
+            printer.printRecord(headers);
 
             for (var r : results) {
-                printer.printRecord("%s,\"%s\",\"%s\",%s,\"%s\",%s%n",
+                printer.printRecord(
                     r.id(),
-                    escape(r.input()),
-                    escape(r.output()),
+                    r.input(),
+                    r.output(),
                     r.status().name(),
-                    escape(r.errorMessage()),
+                    r.errorMessage(),
                     r.createdAt());
             }
             fileWriter.flush();

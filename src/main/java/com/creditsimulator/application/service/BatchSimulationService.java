@@ -27,6 +27,10 @@ public class BatchSimulationService implements BatchSimulationUseCase {
             throw new IllegalArgumentException("Invalid file: must be a non-empty CSV file.");
         }
 
+        if (requesterEmail == null || requesterEmail.isEmpty()) {
+            throw new IllegalArgumentException("Invalid email: must be a non-empty string.");
+        }
+
         UUID jobId = UUID.randomUUID();
 
         var job = new CreditSimulationJob(

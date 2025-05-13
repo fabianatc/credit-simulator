@@ -57,7 +57,7 @@ public class BatchSimulationProcessor {
                 null,
                 LocalDateTime.now()
             );
-
+            
             resultPersistence.save(result);
             log.info("[PROCESSOR] Saved success result for job {}", message.jobId());
 

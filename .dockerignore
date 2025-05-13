@@ -1,0 +1,6 @@
+target/
+docker/data
+.idea/
+*.iml
+*.log
+*.db
